@@ -1,0 +1,39 @@
+UAT SIGN-OFF SHEET
+Smart College Sports Management System (SCSS v1.0)
+Date: ___________  Tester Name: ___________
+
+ROLE: Admin
+─────────────────────────────────────────────────
+ID      Scenario                                    Result    Notes
+UAT-A1  Login → admin dashboard accessible          PASS/FAIL ___
+UAT-A2  Register player → QR code generated         PASS/FAIL ___
+UAT-A3  Create tournament + schedule 3 matches      PASS/FAIL ___
+UAT-A4  Conflict detection fires for overlap        PASS/FAIL ___
+UAT-A5  Export analytics report                     PASS/FAIL ___
+UAT-A6  View QR scan logs                           PASS/FAIL ___
+
+ROLE: Coach
+─────────────────────────────────────────────────
+UAT-C1  Login → coach dashboard accessible          PASS/FAIL ___
+UAT-C2  Add player to team → visible in roster      PASS/FAIL ___
+UAT-C3  Enter score → leaderboard updates           PASS/FAIL ___
+UAT-C4  Request equipment from inventory            PASS/FAIL ___
+UAT-C5  View team performance chart                 PASS/FAIL ___
+
+ROLE: Player
+─────────────────────────────────────────────────
+UAT-P1  Register via /api/auth/register             PASS/FAIL ___
+UAT-P2  Login → view profile and QR code            PASS/FAIL ___
+UAT-P3  View personal schedule                      PASS/FAIL ___
+UAT-P4  Download certificate as PDF                 PASS/FAIL ___
+UAT-P5  Scan certificate QR → Valid shown           PASS/FAIL ___
+
+ROLE: Viewer (Public)
+─────────────────────────────────────────────────
+UAT-V1  GET /api/leaderboard/1 without login        PASS/FAIL ___
+UAT-V2  Scan event QR → tournament visible          PASS/FAIL ___
+UAT-V3  GET /api/verify/SCSS-2025-CERT-001-GOLD     PASS/FAIL ___
+
+─────────────────────────────────────────────────
+Overall Result: PASS / FAIL
+Tester Signature: ___________

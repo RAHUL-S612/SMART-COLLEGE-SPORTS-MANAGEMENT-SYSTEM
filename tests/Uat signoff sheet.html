@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UAT Sign-off Sheet — SCSS v1.0</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --ink:       #0F1923;
+    --ink-mid:   #2C3E50;
+    --ink-soft:  #5A6E7F;
+    --ink-faint: #8FA3B1;
+    --rule:      #C8D6DF;
+    --rule-dark: #8FA3B1;
+    --gold:      #B8860B;
+    --gold-lt:   #F5EDD6;
+    --navy:      #1A3A5C;
+    --pass:      #1B5E20;
+    --fail:      #B71C1C;
+    --bg:        #FAFAF8;
+    --paper:     #FFFFFF;
+    --stamp-red: #C0392B;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Crimson Pro', Georgia, serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* ── TOOLBAR (screen only) ─────────────────────────── */
+  .toolbar {
+    background: var(--navy);
+    color: #fff;
+    padding: 12px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  }
+  .toolbar-left { display: flex; align-items: center; gap: 16px; }
+  .toolbar-badge {
+    background: var(--gold);
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+  .toolbar-actions { display: flex; gap: 10px; }
+  .btn {
+    padding: 7px 18px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn-print {
+    background: var(--gold);
+    color: #fff;
+  }
+  .btn-print:hover { background: #9A7209; }
+  .btn-reset {
+    background: transparent;
+    color: #94A3B8;
+    border: 1px solid #334155;
+  }
+  .btn-reset:hover { color: #fff; border-color: #64748B; }
+  .btn-export {
+    background: #1B5E20;
+    color: #fff;
+  }
+  .btn-export:hover { background: #145017; }
+
+  /* ── DOCUMENT ──────────────────────────────────────── */
+  .document-wrap {
+    max-width: 860px;
+    margin: 36px auto 60px;
+    background: var(--paper);
+    box-shadow: 0 4px 40px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.08);
+    border-top: 4px solid var(--navy);
+  }
+
+  .doc-header {
+    padding: 36px 48px 28px;
+    border-bottom: 2px solid var(--rule);
+    position: relative;
+  }
+
+  .doc-watermark {
+    position: absolute;
+    top: 20px; right: 36px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--rule);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+  }
+
+  .doc-top-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+  }
+
+  .doc-org {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-soft);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  .doc-ref {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-faint);
+    text-align: right;
+  }
+
+  .doc-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--navy);
+    letter-spacing: -0.3px;
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
+
+  .doc-subtitle {
+    font-size: 15px;
+    font-weight: 400;
+    font-style: italic;
+    color: var(--ink-soft);
+    margin-bottom: 20px;
+  }
+
+  .doc-meta-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border: 1px solid var(--rule);
+    margin-top: 20px;
+  }
+  .meta-cell {
+    padding: 10px 14px;
+    border-right: 1px solid var(--rule);
+    font-size: 12px;
+  }
+  .meta-cell:last-child { border-right: none; }
+  .meta-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--ink-faint);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .meta-value { font-weight: 600; color: var(--ink); }
+  .meta-input {
+    border: none;
+    border-bottom: 1px solid var(--rule);
+    background: transparent;
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    width: 100%;
+    padding: 2px 0;
+    outline: none;
+  }
+  .meta-input:focus { border-bottom-color: var(--navy); }
+
+  /* ── BODY ──────────────────────────────────────────── */
+  .doc-body { padding: 32px 48px; }
+
+  .section {
+    margin-bottom: 28px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1.5px solid var(--rule);
+  }
+
+  .section-num {
+    width: 26px; height: 26px;
+    background: var(--navy);
+    color: #fff;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--navy);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .role-badge {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    padding: 3px 10px;
+    border-radius: 2px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .role-admin  { background: #E8EEF5; color: var(--navy);  border: 1px solid #BDD0E0; }
+  .role-coach  { background: #E8F5E9; color: #1B5E20; border: 1px solid #A5D6A7; }
+  .role-player { background: #FFF8E1; color: #827717; border: 1px solid #F9E08A; }
+  .role-viewer { background: #F3E5F5; color: #4A148C; border: 1px solid #CE93D8; }
+
+  /* ── UAT TABLE ─────────────────────────────────────── */
+  .uat-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    margin-bottom: 4px;
+  }
+
+  .uat-table thead tr {
+    background: var(--navy);
+    color: #fff;
+  }
+
+  .uat-table thead th {
+    padding: 9px 12px;
+    text-align: left;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .uat-table tbody tr {
+    border-bottom: 1px solid var(--rule);
+    transition: background 0.1s;
+  }
+
+  .uat-table tbody tr:hover { background: #F8FBFD; }
+
+  .uat-table td {
+    padding: 9px 12px;
+    vertical-align: middle;
+  }
+
+  .uat-id {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--navy);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .uat-scenario {
+    font-size: 13.5px;
+    color: var(--ink);
+    line-height: 1.4;
+  }
+
+  .uat-scenario small {
+    display: block;
+    font-size: 11px;
+    color: var(--ink-soft);
+    font-style: italic;
+    margin-top: 2px;
+  }
+
+  /* ── RADIO RESULT ──────────────────────────────────── */
+  .result-cell { white-space: nowrap; }
+
+  .radio-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .radio-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    user-select: none;
+    transition: color 0.15s;
+  }
+
+  .radio-label input[type="radio"] { display: none; }
+
+  .radio-box {
+    width: 18px; height: 18px;
+    border: 2px solid var(--rule-dark);
+    border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .radio-label.pass:has(input:checked) .radio-box {
+    background: var(--pass);
+    border-color: var(--pass);
+  }
+  .radio-label.pass:has(input:checked) .radio-box::after {
+    content: '✓';
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .radio-label.pass:has(input:checked) { color: var(--pass); }
+
+  .radio-label.fail:has(input:checked) .radio-box {
+    background: var(--fail);
+    border-color: var(--fail);
+  }
+  .radio-label.fail:has(input:checked) .radio-box::after {
+    content: '✗';
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .radio-label.fail:has(input:checked) { color: var(--fail); }
+
+  .radio-label.na:has(input:checked) .radio-box {
+    background: var(--ink-faint);
+    border-color: var(--ink-faint);
+  }
+  .radio-label.na:has(input:checked) .radio-box::after {
+    content: '—';
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .radio-label.na:has(input:checked) { color: var(--ink-faint); }
+
+  /* remarks */
+  .remarks-input {
+    border: none;
+    border-bottom: 1px dashed var(--rule);
+    background: transparent;
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 12px;
+    color: var(--ink-soft);
+    width: 120px;
+    padding: 2px 0;
+    outline: none;
+  }
+  .remarks-input:focus { border-bottom-color: var(--navy); }
+
+  /* ── ROW HIGHLIGHTING ──────────────────────────────── */
+  .uat-table tbody tr.status-pass { background: #F1F8F1; }
+  .uat-table tbody tr.status-fail { background: #FDF0F0; }
+
+  /* ── PROGRESS BAR ──────────────────────────────────── */
+  .progress-section {
+    margin: 20px 0;
+    padding: 16px;
+    background: #F8FBFD;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+  }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-soft);
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+
+  .progress-bar-wrap {
+    height: 8px;
+    background: var(--rule);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--navy), #2E75B6);
+    border-radius: 4px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  .progress-stats {
+    display: flex;
+    gap: 20px;
+    margin-top: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+
+  .stat-pass { color: var(--pass); font-weight: 600; }
+  .stat-fail { color: var(--fail); font-weight: 600; }
+  .stat-pend { color: var(--ink-faint); }
+
+  /* ── OVERALL STATUS ────────────────────────────────── */
+  .overall-section {
+    border: 1.5px solid var(--rule);
+    padding: 20px 24px;
+    margin: 24px 0;
+  }
+
+  .overall-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 14px;
+  }
+
+  .overall-options {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .overall-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 10px 18px;
+    border: 2px solid var(--rule);
+    border-radius: 3px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.15s;
+    user-select: none;
+    min-width: 160px;
+  }
+
+  .overall-label input[type="radio"] { display: none; }
+
+  .overall-label:has(input:checked) {
+    border-width: 2px;
+  }
+
+  .overall-accepted:has(input:checked) {
+    border-color: var(--pass);
+    background: #E8F5E9;
+    color: var(--pass);
+  }
+
+  .overall-rejected:has(input:checked) {
+    border-color: var(--fail);
+    background: #FFEBEE;
+    color: var(--fail);
+  }
+
+  .overall-conditional:has(input:checked) {
+    border-color: #E65100;
+    background: #FFF3E0;
+    color: #E65100;
+  }
+
+  .overall-icon { font-size: 18px; }
+
+  /* ── SIGNATURE SECTION ─────────────────────────────── */
+  .sig-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-top: 24px;
+  }
+
+  .sig-block { }
+
+  .sig-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 10px;
+  }
+
+  .sig-canvas-wrap {
+    border: 1px solid var(--rule);
+    background: #FDFDFD;
+    position: relative;
+    height: 90px;
+    cursor: crosshair;
+  }
+
+  .sig-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .sig-hint {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+    font-style: italic;
+    color: var(--rule-dark);
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  .sig-clear {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--ink-faint);
+    cursor: pointer;
+    margin-top: 4px;
+    display: inline-block;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-decoration: underline;
+    background: none; border: none;
+    padding: 0;
+  }
+  .sig-clear:hover { color: var(--fail); }
+
+  .sig-line-input {
+    width: 100%;
+    border: none;
+    border-bottom: 1.5px solid var(--rule-dark);
+    background: transparent;
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 13px;
+    color: var(--ink);
+    padding: 6px 0;
+    outline: none;
+    margin-top: 6px;
+  }
+  .sig-line-input:focus { border-bottom-color: var(--navy); }
+
+  /* ── FOOTER ────────────────────────────────────────── */
+  .doc-footer {
+    padding: 18px 48px;
+    border-top: 1.5px solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--ink-faint);
+    letter-spacing: 1px;
+  }
+
+  .footer-stamp {
+    font-size: 9px;
+    color: var(--rule-dark);
+    letter-spacing: 1.5px;
+  }
+
+  /* ── STAMP OVERLAY ─────────────────────────────────── */
+  .stamp {
+    display: none;
+    position: absolute;
+    top: 50px; right: 60px;
+    width: 120px; height: 120px;
+    border: 3px solid var(--stamp-red);
+    border-radius: 50%;
+    transform: rotate(-15deg);
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  .stamp-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--stamp-red);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    line-height: 1.3;
+    opacity: 0.7;
+  }
+
+  .stamp.show { display: flex; }
+
+  /* ── PRINT STYLES ──────────────────────────────────── */
+  @media print {
+    .toolbar { display: none !important; }
+    body { background: #fff; padding: 0; }
+    .document-wrap {
+      box-shadow: none;
+      border-top: 3px solid var(--navy);
+      margin: 0;
+      max-width: 100%;
+    }
+    .doc-header { padding: 24px 36px 20px; }
+    .doc-body    { padding: 20px 36px; }
+    .doc-footer  { padding: 14px 36px; }
+    .radio-box   { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .uat-table thead tr { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .sig-canvas-wrap { height: 70px; }
+    .progress-section { display: none; }
+    .remarks-input { border-bottom-color: #999; }
+    .btn { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div class="toolbar-left">
+    <span class="toolbar-badge">SCSS v1.0</span>
+    <span>UAT Sign-off Sheet · SRS §9.1 · B.E CSE</span>
+  </div>
+  <div class="toolbar-actions">
+    <button class="btn btn-reset" onclick="resetAll()">↺ Reset</button>
+    <button class="btn btn-export" onclick="exportSummary()">⬇ Export Summary</button>
+    <button class="btn btn-print" onclick="window.print()">⎙ Print / Save PDF</button>
+  </div>
+</div>
+
+<!-- DOCUMENT -->
+<div class="document-wrap" id="document">
+
+  <!-- STAMP (shows when rejected) -->
+  <div class="stamp" id="stamp">
+    <div class="stamp-text" id="stamp-text">REJECTED</div>
+  </div>
+
+  <!-- HEADER -->
+  <div class="doc-header">
+    <div class="doc-watermark">CONFIDENTIAL · ACADEMIC SUBMISSION</div>
+    <div class="doc-top-meta">
+      <div>
+        <div class="doc-org">B.E Computer Science Engineering · Waterfall SDLC</div>
+      </div>
+      <div class="doc-ref">
+        SRS v1.0 · Section 9.1<br>
+        UAT Phase 7 · Day 16–21
+      </div>
+    </div>
+    <div class="doc-title">User Acceptance Testing</div>
+    <div class="doc-subtitle">Sign-off Sheet — Smart College Sports Management System</div>
+
+    <div class="doc-meta-row">
+      <div class="meta-cell">
+        <div class="meta-label">Project</div>
+        <div class="meta-value">SCSS</div>
+      </div>
+      <div class="meta-cell">
+        <div class="meta-label">Test Date</div>
+        <input class="meta-input" id="test-date" type="date" />
+      </div>
+      <div class="meta-cell">
+        <div class="meta-label">Tester Name</div>
+        <input class="meta-input" id="tester-name" placeholder="Enter name" />
+      </div>
+      <div class="meta-cell">
+        <div class="meta-label">Document Ref</div>
+        <div class="meta-value" style="font-family:'JetBrains Mono',monospace;font-size:11px;">UAT-SCSS-2025</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="doc-body">
+
+    <!-- PROGRESS -->
+    <div class="progress-section" id="progress-section">
+      <div class="progress-label">
+        <span>COMPLETION PROGRESS</span>
+        <span id="progress-pct">0%</span>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progress-bar"></div>
+      </div>
+      <div class="progress-stats">
+        <span class="stat-pass">✓ <span id="pass-count">0</span> PASSED</span>
+        <span class="stat-fail">✗ <span id="fail-count">0</span> FAILED</span>
+        <span class="stat-pend">○ <span id="pend-count">13</span> PENDING</span>
+      </div>
+    </div>
+
+    <!-- ADMIN SECTION -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-num">A</div>
+        <div class="section-title">Admin Role — Sports Coordinator</div>
+        <span class="role-badge role-admin">Admin</span>
+      </div>
+      <table class="uat-table">
+        <thead>
+          <tr>
+            <th style="width:70px">ID</th>
+            <th>Test Scenario</th>
+            <th style="width:150px">Result</th>
+            <th style="width:130px">Remarks</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-admin">
+          <tr data-id="UAT-A1">
+            <td class="uat-id">UAT-A1</td>
+            <td class="uat-scenario">
+              Admin login &amp; dashboard redirect
+              <small>Login with admin credentials → redirect to /admin/dashboard</small>
+            </td>
+            <td class="result-cell">
+              <div class="radio-group">
+                <label class="radio-label pass"><input type="radio" name="UAT-A1" value="pass" onchange="onResult(this)"><span class="radio-box"></span>Pass</label>
+                <label class="radio-label fail"><input type="radio" name="UAT-A1" value="fail" onchange="onResult(this)"><span class="radio-box"></span>Fail</label>
+              </div>
+            </td>
+            <td><input class="remarks-input" placeholder="Notes…" /></td>
+          </tr>
+          <tr data-id="UAT-A2">
+            <td class="uat-id">UAT-A2</td>
+            <td class="uat-scenario">
+              Player registration + QR code generated
+              <small>Register new player → QR auto-generated → profile visible</small>
+            </td>
+            <td class="result-cell">
+              <div class="radio-group">
+                <label class="radio-label pass"><input type="radio" name="UAT-A2" value="pass" onchange="onResult(this)"><span class="radio-box"></span>Pass</label>
+                <label class="radio-label fail"><input type="radio" name="UAT-A2" value="fail" onchange="onResult(this)"><span class="radio-box"></span>Fail</label>
+              </div>
+            </td>
+            <td><input class="remarks-input" placeholder="Notes…" /></td>
+          </tr>
+          <tr data-id="UAT-A3">
+            <td class="uat-id">UAT-A3</td>
+            <td class="uat-scenario">
+              Tournament creation + match scheduling
+              <small>Create tournament → auto-generate fixtures → view schedule</small>
+            </td>
+            <td class="result-cell">
+              <div class="radio-group">
+                <label class="radio-label pass"><input type="radio" name="UAT-A3" value="pass" onchange="onResult(this)"><span class="radio-box"></span>Pass</label>
+                <label class="radio-label fail"><input type="radio" name="UAT-A3" value="fail" onchange="onResult(this)"><span class="radio-box"></span>Fail</label>
+              </div>
+            </td>
+            <td><input class="remarks-input" placeholder="Notes…" /></td>
+          </tr>
+          <tr data-id="UAT-A4">
+            <td class="uat-id">UAT-A4</td>
+            <td class="uat-scenario">
+              Venue conflict detection
+              <small>Schedule two matches same venue + time → conflict error shown</small>
+            </td>
+            <td class="result-cell">
+              <div class="radio-group">
+                <label class="radio-label pass"><input type="radio" name="UAT-A4" value="pass" onchange="onResult(this)"><span class="radio-box"></span>Pass</label>
+                <label class="radio-label fail"><input type="radio" name="UAT-A4" value="fail" onchange="onResult(this)"><span class="radio-box"></span>Fail</label>
+              </div>
+            </td>
+            <td><input class="remarks-input" placeholder="Notes…" /></td>
+          </tr>
+          <tr data-id="UAT-A5">
+            <td class="uat-id">UAT-A5</td>
+            <td class="uat-scenario">
+              Analytics report PDF export
+              <small>Open analytics → export chart data as PDF → file downloads</small>
+            </td>
+            <td class="result-cell">
+              <div class="radio-group">
+                <label class="radio-label pass"><input type="radio" name="UAT-A5" value="pass" onchange="onResult(this)"><span class="radio-box"></span>Pass</label>
+                <label class="radio-label fail"><input type="radio" name="UAT-A5" value="fail" onchange="onResult(this)"><span class="radio-box"></span>Fail</label>
+              </div>
+            </td>
+            <td><input class="remarks-input" placeholder="Notes…" /></td>
+          </tr>
+          <tr data-id="UAT-A6">
+            <td class="uat-id">UAT-A6</td>
+            <td class="uat-scenario">
+              QR scan logs visible
+              <small>Admin views /admin/qr_logs → last 24h scans listed with timestamp</small>
+            </td>
+            <td class="result-cell">
+              <div class="radio-group">
+                <label class="radio-label pass"><input type="radio" name="UAT-A6" value="pass" onchange="onResult(this)"><span class="radio-box"></span>Pass</label>
+                <label class="radio-label fail"><input type="radio" name="UAT-A6" value="fail" onchange="onResult(this)"><span class="radio-box"></span>Fail</label>
+              </div>
+            </td>
+            <td><input class="remarks-input" placeholder="Notes…" /></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- COACH SECTION -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-num">C</div>
+        <div class="section-title">Coach Role — Faculty Member</div>
+        <span class="role-badge role-coach">Coach</span>
+      </div>
+      <table class="uat-table">
+        <thead>
+          <tr>
+            <th style="width:70px">ID</th>
+            <th>Test Scenario</th>
+            <th style="width:150px">Result</th>
+            <th style="width:130px">Remarks</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-coach">
+          <tr data-id="UAT-C1">
+            <td class="uat-id">UAT-C1</td>
+            <td class="uat-scenario">
+              Coach login &amp; dashboard redirect
+              <small>Login with coach credentials → /coach/dashboard with team panel</small>
+            </td>
+            <td class="result-cell">
+              <div class="radio-group">
+                <label class="radio-label pass"><input type="radio" name="UAT-C1" value="pass" onchange="onResult(this)"><span class="radio-box"></span>Pass</label>
+                <label class="radio-label fail"><input type="radio" name="UAT-C1" value="fail" onchange="onResult(this)"><span class="radio-box"></span>Fail</label>
+              </div>
+            </td>
+            <td><input class="remarks-input" placeholder="Notes…" /></td>
+          </tr>
+          <tr data-id="UAT-C2">
+            <td class="uat-id">UAT-C2</td>
+            <td class="uat-scenario">
+              Add player to team
+              <small>Coach adds player → player appears in roster → duplicate sport blocked</small>
+            </td>
+            <td class="result-cell">
+              <div class="radio-group">
+                <label class="radio-label pass"><input type="radio" name="UAT-C2" value="pass" onchange="onResult(this)"><span class="radio-box"></span>Pass</label>
+                <label class="radio-label fail"><input type="radio" name="UAT-C2" value="fail" onchange="onResult(this)"><span class="radio-box"></span>Fail</label>
+              </div>
+            </td>
+            <td><input class="remarks-input" placeholder="Notes…" /></td>
+          </tr>
+          <tr data-id="UAT-C3">
+            <td class="uat-id">UAT-C3</td>
+            <td class="uat-scenario">
+              Score entry → leaderboard auto-updates
+              <small>Enter match score → leaderboard points recalculate within 2s</small>
+            </td>
+            <td class="result-cell">
+              <div class="radio-group">
+                <label class="radio-label pass"><input type="radio" name="UAT-C3" value="pass" onchange="onResult(this)"><span class="radio-box"></span>Pass</label>
+                <label class="radio-label fail"><input type="radio" name="UAT-C3" value="fail" onchange="onResult(this)"><span class="radio-box"></span>Fail</label>
+              </div>
+            </td>
+            <td><input class="remarks-input" placeholder="Notes…" /></td>
+          </tr>
+          <tr data-id="UAT-C4">
+            <td class="uat-id">UAT-C4</td>
+            <td class="uat-scenario">
+              Equipment request from inventory
+              <small>Coach requests cricket ball → admin sees pending request → approves</small>
+            </td>
+            <td class="result-cell">
+              <div class="radio-group">
+                <label class="radio-label pass"><input type="radio" name="UAT-C4" value="pass" onchange="onResult(this)"><span class="radio-box"></span>Pass</label>
+                <label class="radio-label fail"><input type="radio" name="UAT-C4" value="fail" onchange="onResult(this)"><span class="radio-box"></span>Fail</label>
+              </div>
+            </td>
+            <td><input class="remarks-input" placeholder="Notes…" /></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PLAYER SECTION -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-num">P</div>
+        <div class="section-title">Player Role — Student Athlete</div>
+        <span class="role-badge role-player">Player</span>
+      </div>
+      <table class="uat-table">
+        <thead>
+          <tr>
+            <th style="width:70px">ID</th>
+            <th>Test Scenario</th>
+            <th style="width:150px">Result</th>
+            <th style="width:130px">Remarks</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-player">
+          <tr data-id="UAT-P1">
+            <td class="uat-id">UAT-P1</td>
+            <td class="uat-scenario">
+              Player self-registration
+              <small>Open register.html → fill form → account created successfully</small>
+            </td>
+            <td class="result-cell">
+              <div class="radio-group">
+                <label class="radio-label pass"><input type="radio" name="UAT-P1" value="pass" onchange="onResult(this)"><span class="radio-box"></span>Pass</label>
+                <label class="radio-label fail"><input type="radio" name="UAT-P1" value="fail" onchange="onResult(this)"><span class="radio-box"></span>Fail</label>
+              </div>
+            </td>
+            <td><input class="remarks-input" placeholder="Notes…" /></td>
+          </tr>
+          <tr data-id="UAT-P2">
+            <td class="uat-id">UAT-P2</td>
+            <td class="uat-scenario">
+              Profile &amp; QR code view
+              <small>Player opens /player/profile → sees QR card → QR image renders</small>
+            </td>
+            <td class="result-cell">
+              <div class="radio-group">
+                <label class="radio-label pass"><input type="radio" name="UAT-P2" value="pass" onchange="onResult(this)"><span class="radio-box"></span>Pass</label>
+                <label class="radio-label fail"><input type="radio" name="UAT-P2" value="fail" onchange="onResult(this)"><span class="radio-box"></span>Fail</label>
+              </div>
+            </td>
+            <td><input class="remarks-input" placeholder="Notes…" /></td>
+          </tr>
+          <tr data-id="UAT-P3">
+            <td class="uat-id">UAT-P3</td>
+            <td class="uat-scenario">
+              Personal schedule view
+              <small>Player opens /player/myschedule → upcoming matches listed</small>
+            </td>
+            <td class="result-cell">
+              <div class="radio-group">
+                <label class="radio-label pass"><input type="radio" name="UAT-P3" value="pass" onchange="onResult(this)"><span class="radio-box"></span>Pass</label>
+                <label class="radio-label fail"><input type="radio" name="UAT-P3" value="fail" onchange="onResult(this)"><span class="radio-box"></span>Fail</label>
+              </div>
+            </td>
+            <td><input class="remarks-input" placeholder="Notes…" /></td>
+          </tr>
+          <tr data-id="UAT-P4">
+            <td class="uat-id">UAT-P4</td>
+            <td class="uat-scenario">
+              Certificate PDF download
+              <small>Player opens /player/certificate → clicks Download → PDF saves</small>
+            </td>
+            <td class="result-cell">
+              <div class="radio-group">
+                <label class="radio-label pass"><input type="radio" name="UAT-P4" value="pass" onchange="onResult(this)"><span class="radio-box"></span>Pass</label>
+                <label class="radio-label fail"><input type="radio" name="UAT-P4" value="fail" onchange="onResult(this)"><span class="radio-box"></span>Fail</label>
+              </div>
+            </td>
+            <td><input class="remarks-input" placeholder="Notes…" /></td>
+          </tr>
+          <tr data-id="UAT-P5">
+            <td class="uat-id">UAT-P5</td>
+            <td class="uat-scenario">
+              Certificate QR scan → Valid status
+              <small>Scan cert QR with phone → /verify page shows VALID + player name</small>
+            </td>
+            <td class="result-cell">
+              <div class="radio-group">
+                <label class="radio-label pass"><input type="radio" name="UAT-P5" value="pass" onchange="onResult(this)"><span class="radio-box"></span>Pass</label>
+                <label class="radio-label fail"><input type="radio" name="UAT-P5" value="fail" onchange="onResult(this)"><span class="radio-box"></span>Fail</label>
+              </div>
+            </td>
+            <td><input class="remarks-input" placeholder="Notes…" /></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- VIEWER SECTION -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-num">V</div>
+        <div class="section-title">Viewer Role — Public Access</div>
+        <span class="role-badge role-viewer">Viewer</span>
+      </div>
+      <table class="uat-table">
+        <thead>
+          <tr>
+            <th style="width:70px">ID</th>
+            <th>Test Scenario</th>
+            <th style="width:150px">Result</th>
+            <th style="width:130px">Remarks</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-viewer">
+          <tr data-id="UAT-V1">
+            <td class="uat-id">UAT-V1</td>
+            <td class="uat-scenario">
+              Public leaderboard — no login required
+              <small>Open /leaderboard in browser (no login) → standings visible</small>
+            </td>
+            <td class="result-cell">
+              <div class="radio-group">
+                <label class="radio-label pass"><input type="radio" name="UAT-V1" value="pass" onchange="onResult(this)"><span class="radio-box"></span>Pass</label>
+                <label class="radio-label fail"><input type="radio" name="UAT-V1" value="fail" onchange="onResult(this)"><span class="radio-box"></span>Fail</label>
+              </div>
+            </td>
+            <td><input class="remarks-input" placeholder="Notes…" /></td>
+          </tr>
+          <tr data-id="UAT-V2">
+            <td class="uat-id">UAT-V2</td>
+            <td class="uat-scenario">
+              Tournament schedule via QR scan
+              <small>Scan tournament QR code → schedule page loads without login</small>
+            </td>
+            <td class="result-cell">
+              <div class="radio-group">
+                <label class="radio-label pass"><input type="radio" name="UAT-V2" value="pass" onchange="onResult(this)"><span class="radio-box"></span>Pass</label>
+                <label class="radio-label fail"><input type="radio" name="UAT-V2" value="fail" onchange="onResult(this)"><span class="radio-box"></span>Fail</label>
+              </div>
+            </td>
+            <td><input class="remarks-input" placeholder="Notes…" /></td>
+          </tr>
+          <tr data-id="UAT-V3">
+            <td class="uat-id">UAT-V3</td>
+            <td class="uat-scenario">
+              Certificate verify page — public
+              <small>Open /verify?id=SCSS-2025-CERT-001-GOLD → shows Valid status</small>
+            </td>
+            <td class="result-cell">
+              <div class="radio-group">
+                <label class="radio-label pass"><input type="radio" name="UAT-V3" value="pass" onchange="onResult(this)"><span class="radio-box"></span>Pass</label>
+                <label class="radio-label fail"><input type="radio" name="UAT-V3" value="fail" onchange="onResult(this)"><span class="radio-box"></span>Fail</label>
+              </div>
+            </td>
+            <td><input class="remarks-input" placeholder="Notes…" /></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- OVERALL STATUS -->
+    <div class="overall-section">
+      <div class="overall-title">Overall UAT Status</div>
+      <div class="overall-options">
+        <label class="overall-label overall-accepted">
+          <input type="radio" name="overall" value="accepted" onchange="onOverall(this)">
+          <span class="overall-icon">✅</span>
+          <span>ACCEPTED</span>
+        </label>
+        <label class="overall-label overall-rejected">
+          <input type="radio" name="overall" value="rejected" onchange="onOverall(this)">
+          <span class="overall-icon">❌</span>
+          <span>REJECTED</span>
+        </label>
+        <label class="overall-label overall-conditional">
+          <input type="radio" name="overall" value="conditional" onchange="onOverall(this)">
+          <span class="overall-icon">⚠️</span>
+          <span>CONDITIONAL</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- CONDITIONS / COMMENTS -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-num" style="background:#5A6E7F">✎</div>
+        <div class="section-title">Conditions &amp; Comments</div>
+      </div>
+      <textarea id="comments" style="
+        width:100%; height:70px; border:1px solid var(--rule);
+        font-family:'Crimson Pro',Georgia,serif; font-size:13.5px;
+        color:var(--ink); padding:10px 12px; resize:vertical;
+        outline:none; background:#FAFAF8; line-height:1.6;
+      " placeholder="Enter any conditions, bugs observed, or additional comments here…"></textarea>
+    </div>
+
+    <!-- SIGNATURES -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-num" style="background:#5A6E7F">§</div>
+        <div class="section-title">Signatures &amp; Authorisation</div>
+      </div>
+      <div class="sig-grid">
+
+        <div class="sig-block">
+          <div class="sig-label">Sports Coordinator Signature</div>
+          <div class="sig-canvas-wrap">
+            <canvas class="sig-canvas" id="sig-coordinator"></canvas>
+            <div class="sig-hint" id="hint-coordinator">Sign here with mouse / touch</div>
+          </div>
+          <button class="sig-clear" onclick="clearSig('sig-coordinator','hint-coordinator')">Clear signature</button>
+          <input class="sig-line-input" id="coord-name" placeholder="Print name" />
+          <input class="sig-line-input" id="coord-date" type="date" style="margin-top:6px;" />
+        </div>
+
+        <div class="sig-block">
+          <div class="sig-label">Project Lead Signature (S.RAHUL)</div>
+          <div class="sig-canvas-wrap">
+            <canvas class="sig-canvas" id="sig-lead"></canvas>
+            <div class="sig-hint" id="hint-lead">Sign here with mouse / touch</div>
+          </div>
+          <button class="sig-clear" onclick="clearSig('sig-lead','hint-lead')">Clear signature</button>
+          <input class="sig-line-input" id="lead-name" placeholder="S.RAHUL" value="S.RAHUL" />
+          <input class="sig-line-input" id="lead-date" type="date" style="margin-top:6px;" />
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /doc-body -->
+
+  <!-- FOOTER -->
+  <div class="doc-footer">
+    <span>Smart College Sports Management System · UAT Sign-off · SRS v1.0</span>
+    <span class="footer-stamp">B.E CSE · 10-Member Team · Waterfall SDLC · Deadline 30/04/2026</span>
+  </div>
+
+</div><!-- /document -->
+
+<script>
+// ── SIGNATURE CANVAS ──────────────────────────────────────────
+function initSigCanvas(canvasId, hintId) {
+  const canvas = document.getElementById(canvasId);
+  const hint   = document.getElementById(hintId);
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  let drawing = false;
+  let hasDrawn = false;
+
+  function resize() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    canvas.width  = rect.width;
+    canvas.height = rect.height || 90;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    if (e.touches) {
+      return {
+        x: e.touches[0].clientX - rect.left,
+        y: e.touches[0].clientY - rect.top,
+      };
+    }
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+
+  function start(e) {
+    e.preventDefault();
+    drawing = true;
+    const pos = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+    if (!hasDrawn) { hint.style.opacity = '0'; hasDrawn = true; }
+  }
+
+  function draw(e) {
+    if (!drawing) return;
+    e.preventDefault();
+    const pos = getPos(e);
+    ctx.lineWidth   = 1.8;
+    ctx.lineCap     = 'round';
+    ctx.strokeStyle = '#0F1923';
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+  }
+
+  function stop() { drawing = false; }
+
+  canvas.addEventListener('mousedown',  start);
+  canvas.addEventListener('mousemove',  draw);
+  canvas.addEventListener('mouseup',    stop);
+  canvas.addEventListener('mouseleave', stop);
+  canvas.addEventListener('touchstart', start, { passive: false });
+  canvas.addEventListener('touchmove',  draw,  { passive: false });
+  canvas.addEventListener('touchend',   stop);
+}
+
+function clearSig(canvasId, hintId) {
+  const canvas = document.getElementById(canvasId);
+  const hint   = document.getElementById(hintId);
+  const ctx    = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  hint.style.opacity = '1';
+}
+
+initSigCanvas('sig-coordinator', 'hint-coordinator');
+initSigCanvas('sig-lead',        'hint-lead');
+
+
+// ── RESULT HANDLER ────────────────────────────────────────────
+function onResult(radio) {
+  const row = radio.closest('tr');
+  row.classList.remove('status-pass', 'status-fail');
+  if (radio.value === 'pass') row.classList.add('status-pass');
+  if (radio.value === 'fail') row.classList.add('status-fail');
+  updateProgress();
+}
+
+function updateProgress() {
+  const all     = document.querySelectorAll('input[type="radio"][value="pass"], input[type="radio"][value="fail"]');
+  const checked = document.querySelectorAll('input[type="radio"]:checked');
+  const passed  = document.querySelectorAll('input[type="radio"][value="pass"]:checked').length;
+  const failed  = document.querySelectorAll('input[type="radio"][value="fail"]:checked').length;
+  const total   = 13; // total UAT items
+  const done    = passed + failed;
+
+  document.getElementById('pass-count').textContent = passed;
+  document.getElementById('fail-count').textContent = failed;
+  document.getElementById('pend-count').textContent = total - done;
+
+  const pct = Math.round((done / total) * 100);
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('progress-pct').textContent = pct + '%';
+}
+
+// ── OVERALL STATUS HANDLER ────────────────────────────────────
+function onOverall(radio) {
+  const stamp = document.getElementById('stamp');
+  const text  = document.getElementById('stamp-text');
+  stamp.classList.remove('show');
+
+  if (radio.value === 'rejected') {
+    text.textContent = 'REJECTED';
+    stamp.style.borderColor = '#C0392B';
+    text.style.color = '#C0392B';
+    stamp.classList.add('show');
+  } else if (radio.value === 'conditional') {
+    text.textContent = 'CONDITIONAL';
+    stamp.style.borderColor = '#E65100';
+    text.style.color = '#E65100';
+    stamp.classList.add('show');
+  } else if (radio.value === 'accepted') {
+    text.textContent = 'ACCEPTED';
+    stamp.style.borderColor = '#1B5E20';
+    text.style.color = '#1B5E20';
+    stamp.classList.add('show');
+  }
+}
+
+// ── RESET ─────────────────────────────────────────────────────
+function resetAll() {
+  if (!confirm('Reset all results? This cannot be undone.')) return;
+  document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+  document.querySelectorAll('tr[data-id]').forEach(r => {
+    r.classList.remove('status-pass','status-fail');
+  });
+  document.querySelectorAll('.remarks-input').forEach(i => i.value = '');
+  document.getElementById('comments').value = '';
+  document.getElementById('test-date').value = '';
+  document.getElementById('tester-name').value = '';
+  document.getElementById('coord-name').value = '';
+  document.getElementById('coord-date').value = '';
+  document.getElementById('stamp').classList.remove('show');
+  clearSig('sig-coordinator','hint-coordinator');
+  clearSig('sig-lead','hint-lead');
+  updateProgress();
+}
+
+// ── EXPORT SUMMARY ────────────────────────────────────────────
+function exportSummary() {
+  const rows = document.querySelectorAll('tr[data-id]');
+  let lines = [
+    'UAT SUMMARY REPORT — SCSS v1.0',
+    '================================',
+    `Test Date : ${document.getElementById('test-date').value || 'N/A'}`,
+    `Tester    : ${document.getElementById('tester-name').value || 'N/A'}`,
+    `Comments  : ${document.getElementById('comments').value || 'None'}`,
+    '',
+    'ID        SCENARIO                              RESULT    REMARKS',
+    '─'.repeat(72),
+  ];
+
+  rows.forEach(row => {
+    const id       = row.dataset.id.padEnd(10);
+    const scenario = row.querySelector('.uat-scenario').firstChild.textContent.trim().substring(0,38).padEnd(40);
+    const checked  = row.querySelector('input[type="radio"]:checked');
+    const result   = checked ? checked.value.toUpperCase().padEnd(10) : 'PENDING   ';
+    const remarks  = row.querySelector('.remarks-input').value || '—';
+    lines.push(`${id}${scenario}${result}${remarks}`);
+  });
+
+  const overall = document.querySelector('input[name="overall"]:checked');
+  lines.push('');
+  lines.push('─'.repeat(72));
+  lines.push(`OVERALL STATUS : ${overall ? overall.value.toUpperCase() : 'NOT SET'}`);
+  lines.push(`COORDINATOR    : ${document.getElementById('coord-name').value || 'N/A'}`);
+  lines.push(`SIGN DATE      : ${document.getElementById('coord-date').value || 'N/A'}`);
+
+  const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'SCSS_UAT_Summary.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── SET TODAY'S DATE ──────────────────────────────────────────
+document.getElementById('test-date').valueAsDate  = new Date();
+document.getElementById('coord-date').valueAsDate = new Date();
+document.getElementById('lead-date').valueAsDate  = new Date();
+</script>
+</body>
+</html>

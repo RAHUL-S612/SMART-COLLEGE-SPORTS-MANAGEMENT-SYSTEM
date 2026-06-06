@@ -1,0 +1,1212 @@
+{
+  "info": {
+    "name": "SCSS API Tests",
+    "description": "SCSS v1.0 · B.E CSE · SRS Document\nTesting & Deployment Guide\nPhase 3 — API Testing\nAll endpoints tested: Auth, Players, Teams, Matches, Scores, Certificates, QR, Notifications, Inventory",
+    "_postman_id": "scss-v1-be-cse-2025",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+
+  "variable": [
+    { "key": "base_url",     "value": "http://localhost:5000",  "type": "string" },
+    { "key": "admin_token",  "value": "admin-test-token",       "type": "string" },
+    { "key": "coach_token",  "value": "coach-test-token",       "type": "string" },
+    { "key": "player_token", "value": "player-test-token",      "type": "string" },
+    { "key": "player_id",    "value": "1",                      "type": "string" },
+    { "key": "match_id",     "value": "1",                      "type": "string" },
+    { "key": "team_id",      "value": "1",                      "type": "string" },
+    { "key": "tournament_id","value": "1",                      "type": "string" },
+    { "key": "cert_id",      "value": "1",                      "type": "string" }
+  ],
+
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "id": "collection-prerequest",
+        "type": "text/javascript",
+        "exec": [
+          "// ============================================================",
+          "// SCSS v1.0 · B.E CSE · SRS Document",
+          "// Phase 3 — API Testing",
+          "// Collection Pre-request Script — Auto-Login",
+          "// (Postman: Collection → Edit → Pre-request Scripts)",
+          "// Auto-fetches and stores the JWT token before each request",
+          "// ============================================================",
+          "",
+          "// ── Set base_url fallback ────────────────────────────────────",
+          "if (!pm.environment.get('base_url') || pm.environment.get('base_url') === '') {",
+          "    pm.environment.set('base_url', 'http://localhost:5000');",
+          "}",
+          "",
+          "// ── Only fetch tokens if missing ─────────────────────────────",
+          "var needsAdmin  = !pm.environment.get('admin_token')  || pm.environment.get('admin_token')  === 'admin-test-token';",
+          "var needsCoach  = !pm.environment.get('coach_token')  || pm.environment.get('coach_token')  === 'coach-test-token';",
+          "var needsPlayer = !pm.environment.get('player_token') || pm.environment.get('player_token') === 'player-test-token';",
+          "",
+          "if (!needsAdmin && !needsCoach && !needsPlayer) {",
+          "    console.log('SCSS: All tokens ready — skipping login');",
+          "    console.log('Admin  :', pm.environment.get('admin_token').substring(0,20) + '...');",
+          "    console.log('Coach  :', pm.environment.get('coach_token').substring(0,20) + '...');",
+          "    console.log('Player :', pm.environment.get('player_token').substring(0,20) + '...');",
+          "}",
+          "",
+          "// ── Step 1: Admin Token ───────────────────────────────────────",
+          "// SRS Reference: FR-AU-01 — Admin login with email/password",
+          "if (needsAdmin) {",
+          "    pm.sendRequest(",
+          "        {",
+          "            url:    pm.environment.get('base_url') + '/api/auth/login',",
+          "            method: 'POST',",
+          "            header: [{ key: 'Content-Type', value: 'application/json' }],",
+          "            body: {",
+          "                mode: 'raw',",
+          "                raw:  JSON.stringify({",
+          "                    username: 'admin',",
+          "                    password: 'admin123'",
+          "                })",
+          "            }",
+          "        },",
+          "        function(err, res) {",
+          "            if (err) {",
+          "                console.log('SCSS Admin login error:', err);",
+          "                pm.environment.set('admin_token', 'admin-test-token');",
+          "                return;",
+          "            }",
+          "            try {",
+          "                var json  = res.json();",
+          "                var token = json.access_token || json.token || 'admin-test-token';",
+          "                pm.environment.set('admin_token', token);",
+          "                console.log('SCSS Admin token set:', token);",
+          "",
+          "                // ── Step 2: Coach Token (nested — sequential) ──",
+          "                if (needsCoach) {",
+          "                    pm.sendRequest(",
+          "                        {",
+          "                            url:    pm.environment.get('base_url') + '/api/auth/login',",
+          "                            method: 'POST',",
+          "                            header: [{ key: 'Content-Type', value: 'application/json' }],",
+          "                            body: {",
+          "                                mode: 'raw',",
+          "                                raw:  JSON.stringify({",
+          "                                    username: 'coach1',",
+          "                                    password: 'coach123'",
+          "                                })",
+          "                            }",
+          "                        },",
+          "                        function(coachErr, coachRes) {",
+          "                            if (coachErr) {",
+          "                                pm.environment.set('coach_token', 'coach-test-token');",
+          "                                return;",
+          "                            }",
+          "                            try {",
+          "                                var coachJson  = coachRes.json();",
+          "                                var coachToken = coachJson.access_token || coachJson.token || 'coach-test-token';",
+          "                                pm.environment.set('coach_token', coachToken);",
+          "                                console.log('SCSS Coach token set:', coachToken);",
+          "                            } catch(e) {",
+          "                                pm.environment.set('coach_token', 'coach-test-token');",
+          "                            }",
+          "",
+          "                            // ── Step 3: Player Token (nested — sequential) ──",
+          "                            if (needsPlayer) {",
+          "                                pm.sendRequest(",
+          "                                    {",
+          "                                        url:    pm.environment.get('base_url') + '/api/auth/login',",
+          "                                        method: 'POST',",
+          "                                        header: [{ key: 'Content-Type', value: 'application/json' }],",
+          "                                        body: {",
+          "                                            mode: 'raw',",
+          "                                            raw:  JSON.stringify({",
+          "                                                username: 'player1',",
+          "                                                password: 'player123'",
+          "                                            })",
+          "                                        }",
+          "                                    },",
+          "                                    function(playerErr, playerRes) {",
+          "                                        if (playerErr) {",
+          "                                            pm.environment.set('player_token', 'player-test-token');",
+          "                                            return;",
+          "                                        }",
+          "                                        try {",
+          "                                            var playerJson  = playerRes.json();",
+          "                                            var playerToken = playerJson.access_token || playerJson.token || 'player-test-token';",
+          "                                            pm.environment.set('player_token', playerToken);",
+          "                                            console.log('SCSS Player token set:', playerToken);",
+          "                                            console.log('SCSS: All tokens ready');",
+          "                                        } catch(e) {",
+          "                                            pm.environment.set('player_token', 'player-test-token');",
+          "                                        }",
+          "                                    }",
+          "                                );",
+          "                            }",
+          "                        }",
+          "                    );",
+          "                }",
+          "            } catch(e) {",
+          "                console.log('SCSS Token parse error:', e);",
+          "                pm.environment.set('admin_token', 'admin-test-token');",
+          "            }",
+          "        }",
+          "    );",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "id": "collection-test",
+        "type": "text/javascript",
+        "exec": [
+          "// ============================================================",
+          "// SCSS v1.0 · B.E CSE · SRS Document",
+          "// Phase 3 — API Testing",
+          "// Collection-level Post-request Script",
+          "// Runs after EVERY request in the collection",
+          "// ============================================================",
+          "",
+          "// ── Global: Response time check ───────────────────────────────",
+          "pm.test('Response time under 5000ms', function() {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});",
+          "",
+          "// ── Global: Content-Type check for API routes ─────────────────",
+          "var url = pm.request.url.toString();",
+          "if (url.indexOf('/api/') !== -1) {",
+          "    var ct = pm.response.headers.get('Content-Type') || '';",
+          "    if (ct.indexOf('application/pdf') === -1) {",
+          "        pm.test('Content-Type is JSON', function() {",
+          "            pm.expect(ct).to.include('application/json');",
+          "        });",
+          "    }",
+          "}",
+          "",
+          "// ── Global: No 500 errors ────────────────────────────────────",
+          "pm.test('No server error (not 500)', function() {",
+          "    pm.expect(pm.response.code).to.not.equal(500);",
+          "});",
+          "",
+          "// ── Auto-refresh token from login responses ──────────────────",
+          "if (pm.request.url.toString().indexOf('/auth/login') !== -1 && pm.response.code === 200) {",
+          "    try {",
+          "        var json = pm.response.json();",
+          "        if (json.access_token || json.token) {",
+          "            var t = json.access_token || json.token;",
+          "            if (json.role === 'admin')  { pm.environment.set('admin_token',  t); }",
+          "            if (json.role === 'coach')  { pm.environment.set('coach_token',  t); }",
+          "            if (json.role === 'player') { pm.environment.set('player_token', t); }",
+          "        }",
+          "    } catch(e) {}",
+          "}"
+        ]
+      }
+    }
+  ],
+
+  "item": [
+
+    {
+      "name": "Auth",
+      "description": "TC-01, TC-02, TC-03 — Authentication tests\nSRS §FR-AU-01 to FR-AU-05",
+      "item": [
+        {
+          "name": "TC-01 Admin Login Valid",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": { "exec": ["// TC-01: Valid admin login — SRS FR-AU-01"] }
+            },
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "// POST /api/auth/login — Tests tab",
+                "// SRS Reference: FR-AU-01",
+                "pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+                "pm.test('Has access_token', function() {",
+                "    var json = pm.response.json();",
+                "    pm.expect(json).to.have.property('access_token');",
+                "    pm.environment.set('admin_token', json.access_token);",
+                "});",
+                "pm.test('Role is admin', function() {",
+                "    pm.expect(pm.response.json().role).to.eql('admin');",
+                "});",
+                "pm.test('Status is success', function() {",
+                "    pm.expect(pm.response.json().status).to.eql('success');",
+                "});",
+                "pm.test('Has user_id', function() {",
+                "    pm.expect(pm.response.json()).to.have.property('user_id');",
+                "});",
+                "var t = pm.response.json().access_token || pm.response.json().token || 'admin-test-token';",
+                "pm.environment.set('admin_token', t);",
+                "console.log('Admin token saved:', t);"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "{{base_url}}/api/auth/login",
+            "body": {"mode": "raw", "raw": "{\"username\":\"admin\",\"password\":\"admin123\"}"}
+          }
+        },
+        {
+          "name": "TC-01 Coach Login Valid",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// TC-01 variant: Coach login"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+                "pm.test('Has access_token', function() {",
+                "    pm.expect(pm.response.json()).to.have.property('access_token');",
+                "});",
+                "pm.test('Role is coach', function() {",
+                "    pm.expect(pm.response.json().role).to.eql('coach');",
+                "});",
+                "var t = pm.response.json().access_token || pm.response.json().token || 'coach-test-token';",
+                "pm.environment.set('coach_token', t);"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "{{base_url}}/api/auth/login",
+            "body": {"mode": "raw", "raw": "{\"username\":\"coach1\",\"password\":\"coach123\"}"}
+          }
+        },
+        {
+          "name": "TC-01 Player Login Valid",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// TC-01 variant: Player login"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+                "pm.test('Role is player', function() {",
+                "    pm.expect(pm.response.json().role).to.eql('player');",
+                "});",
+                "var t = pm.response.json().access_token || pm.response.json().token || 'player-test-token';",
+                "pm.environment.set('player_token', t);"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "{{base_url}}/api/auth/login",
+            "body": {"mode": "raw", "raw": "{\"username\":\"player1\",\"password\":\"player123\"}"}
+          }
+        },
+        {
+          "name": "TC-02 Invalid Login — Wrong Password",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// TC-02: Invalid credentials — SRS FR-AU-03"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 401', function() { pm.response.to.have.status(401); });",
+                "pm.test('No token returned', function() {",
+                "    var j = pm.response.json();",
+                "    pm.expect(j).to.not.have.property('access_token');",
+                "});",
+                "pm.test('Error message present', function() {",
+                "    pm.expect(pm.response.json().status).to.eql('error');",
+                "});"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "{{base_url}}/api/auth/login",
+            "body": {"mode": "raw", "raw": "{\"username\":\"admin\",\"password\":\"wrongpassword\"}"}
+          }
+        },
+        {
+          "name": "TC-02 Invalid Login — Empty Credentials",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// TC-02: Empty credentials"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 401', function() { pm.response.to.have.status(401); });",
+                "pm.test('No access_token', function() {",
+                "    pm.expect(pm.response.json()).to.not.have.property('access_token');",
+                "});"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "{{base_url}}/api/auth/login",
+            "body": {"mode": "raw", "raw": "{\"username\":\"\",\"password\":\"\"}"}
+          }
+        },
+        {
+          "name": "TC-03 Logout",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// TC-03: Logout — SRS FR-AU-04"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+                "pm.test('Logout success', function() {",
+                "    pm.expect(pm.response.json().status).to.eql('success');",
+                "});"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{admin_token}}"}],
+            "url": "{{base_url}}/api/auth/logout"
+          }
+        },
+        {
+          "name": "Register New Player",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// Register player — SRS FR-AU-02"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 201', function() { pm.response.to.have.status(201); });",
+                "pm.test('Has player_id', function() {",
+                "    pm.expect(pm.response.json()).to.have.property('player_id');",
+                "});",
+                "pm.environment.set('player_id', pm.response.json().player_id);"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "{{base_url}}/api/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Arjun Kumar\",\"email\":\"arjun.new@college.edu\",\"password\":\"Player@123\",\"role\":\"player\",\"reg_number\":\"CSE2025099\",\"department\":\"CSE\",\"year\":2,\"sport_id\":1}"
+            }
+          }
+        },
+        {
+          "name": "Verify Token",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// Verify token validity"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+                "pm.test('Token valid', function() {",
+                "    pm.expect(pm.response.json().valid).to.be.true;",
+                "});"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{admin_token}}"}],
+            "url": "{{base_url}}/api/auth/verify-token"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Players",
+      "description": "TC-04 — Player management tests\nSRS §FR-PM-01 to FR-PM-05",
+      "item": [
+        {
+          "name": "TC-04 Get All Players",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// TC-04: Get all players — SRS FR-PM-01"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+                "pm.test('Data is array', function() {",
+                "    pm.expect(pm.response.json().data).to.be.an('array');",
+                "});",
+                "pm.test('Status success', function() {",
+                "    pm.expect(pm.response.json().status).to.eql('success');",
+                "});"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{admin_token}}"}],
+            "url": "{{base_url}}/api/players"
+          }
+        },
+        {
+          "name": "TC-04 Get Player by ID (has QR code)",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// TC-04: Player has QR code — SRS FR-QR-01"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+                "pm.test('Has qr_code', function() {",
+                "    pm.expect(pm.response.json()).to.have.property('qr_code');",
+                "    pm.expect(pm.response.json().qr_code).to.not.be.null;",
+                "});",
+                "pm.test('Has player_id', function() {",
+                "    pm.expect(pm.response.json()).to.have.property('player_id');",
+                "});"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{admin_token}}"}],
+            "url": "{{base_url}}/api/players/1"
+          }
+        },
+        {
+          "name": "TC-04 Add Player to Team",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// TC-04: Add player to team — SRS FR-TM-02"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 201', function() { pm.response.to.have.status(201); });",
+                "pm.test('Player added', function() {",
+                "    pm.expect(pm.response.json().status).to.eql('success');",
+                "});"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type",  "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{admin_token}}"}
+            ],
+            "url": "{{base_url}}/api/teams/{{team_id}}/players",
+            "body": {"mode": "raw", "raw": "{\"player_id\":3}"}
+          }
+        },
+        {
+          "name": "TC-04 Get Team Roster",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// TC-04: Get team roster"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+                "pm.test('Players is array', function() {",
+                "    pm.expect(pm.response.json().players).to.be.an('array');",
+                "});",
+                "pm.test('Player in roster', function() {",
+                "    var players = pm.response.json().players;",
+                "    var found   = players.some(function(p) { return p.player_id === 3; });",
+                "    pm.expect(found).to.be.true;",
+                "});"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{admin_token}}"}],
+            "url": "{{base_url}}/api/teams/{{team_id}}/players"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Teams",
+      "description": "Team management tests — SRS §FR-TM-01",
+      "item": [
+        {
+          "name": "Get All Teams",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// Get all teams"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 200', function() { pm.response.to.have.status(200); });"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{admin_token}}"}],
+            "url": "{{base_url}}/teams/"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Matches",
+      "description": "TC-05, TC-06 — Match scheduling and conflict detection\nSRS §FR-ES-01 to FR-ES-03",
+      "item": [
+        {
+          "name": "TC-05 Schedule Match",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// TC-05: Schedule match — SRS FR-ES-01"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 201', function() { pm.response.to.have.status(201); });",
+                "pm.test('Has match_id', function() {",
+                "    pm.expect(pm.response.json()).to.have.property('match_id');",
+                "});",
+                "pm.test('Match created', function() {",
+                "    pm.expect(pm.response.json().status).to.eql('success');",
+                "});",
+                "pm.environment.set('match_id', pm.response.json().match_id);"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type",  "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{admin_token}}"}
+            ],
+            "url": "{{base_url}}/api/matches/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tournament_id\":1,\"team1_id\":1,\"team2_id\":2,\"venue\":\"Ground A\",\"scheduled_at\":\"2025-12-10T10:00:00\"}"
+            }
+          }
+        },
+        {
+          "name": "TC-06 Conflict Detection — Same Venue & Time",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// TC-06: Conflict detection — SRS FR-ES-03"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "// POST /api/matches/ — conflict detection test",
+                "pm.test('Conflict returns 409', function() {",
+                "    pm.response.to.have.status(409);",
+                "});",
+                "pm.test('Error mentions conflict', function() {",
+                "    pm.expect(pm.response.json().error).to.include('conflict');",
+                "});"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type",  "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{admin_token}}"}
+            ],
+            "url": "{{base_url}}/api/matches/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tournament_id\":1,\"team1_id\":3,\"team2_id\":4,\"venue\":\"Ground A\",\"scheduled_at\":\"2025-12-10T10:00:00\"}"
+            }
+          }
+        },
+        {
+          "name": "Get All Matches",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// Get match list"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+                "pm.test('Matches is array', function() {",
+                "    pm.expect(pm.response.json().matches).to.be.an('array');",
+                "});",
+                "pm.test('Scheduled match present', function() {",
+                "    var matches = pm.response.json().matches;",
+                "    pm.expect(matches.length).to.be.above(0);",
+                "});"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{admin_token}}"}],
+            "url": "{{base_url}}/api/matches/?tournament_id=1"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Scores",
+      "description": "TC-07, TC-08 — Score entry and certificate generation\nSRS §FR-SC-01 to FR-SC-03",
+      "item": [
+        {
+          "name": "TC-07 Enter Score — Updates Leaderboard",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// TC-07: Score entry — SRS FR-SC-01"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 201', function() { pm.response.to.have.status(201); });",
+                "pm.test('Has score_id', function() {",
+                "    pm.expect(pm.response.json()).to.have.property('score_id');",
+                "});",
+                "pm.test('Score entry success', function() {",
+                "    pm.expect(pm.response.json().status).to.eql('success');",
+                "});"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type",  "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{coach_token}}"}
+            ],
+            "url": "{{base_url}}/api/scores/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"match_id\":1,\"team1_score\":3,\"team2_score\":1,\"winner_team_id\":1}"
+            }
+          }
+        },
+        {
+          "name": "TC-08 Certificate Auto-Generated",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// TC-08: Certificate auto-generation — SRS FR-CE-01"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+                "pm.test('Has certificates', function() {",
+                "    var certs = pm.response.json().certificates;",
+                "    pm.expect(certs).to.be.an('array');",
+                "    pm.expect(certs.length).to.be.above(0);",
+                "});",
+                "pm.test('Certificate has pdf_path', function() {",
+                "    var cert = pm.response.json().certificates[0];",
+                "    pm.expect(cert.pdf_path).to.not.be.null;",
+                "});",
+                "pm.test('Certificate has unique_code', function() {",
+                "    var cert = pm.response.json().certificates[0];",
+                "    pm.expect(cert.unique_code).to.include('SCSS-');",
+                "});",
+                "pm.environment.set('cert_id', pm.response.json().certificates[0].certificate_id);"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{coach_token}}"}],
+            "url": "{{base_url}}/api/certificates/?tournament_id=1"
+          }
+        },
+        {
+          "name": "Get All Scores",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// Get scores list"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 200', function() { pm.response.to.have.status(200); });"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{admin_token}}"}],
+            "url": "{{base_url}}/scores/"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Certificates",
+      "description": "TC-09, TC-10, TC-11, TC-12 — QR verification and certificate download\nSRS §FR-CE-01 to FR-CE-04",
+      "item": [
+        {
+          "name": "TC-09 Verify Valid QR Code",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// TC-09: Valid QR scan — SRS FR-QR-02"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+                "pm.test('is_valid true', function() {",
+                "    pm.expect(pm.response.json().is_valid).to.be.true;",
+                "});",
+                "pm.test('Has player_name', function() {",
+                "    pm.expect(pm.response.json()).to.have.property('player_name');",
+                "});"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/verify/SCSS-2025-CERT-001-GOLD"
+          }
+        },
+        {
+          "name": "TC-10 Verify Invalid QR Code",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// TC-10: Invalid QR scan — SRS FR-QR-03"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 404', function() { pm.response.to.have.status(404); });",
+                "pm.test('is_valid false', function() {",
+                "    pm.expect(pm.response.json().is_valid).to.be.false;",
+                "});"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/verify/FAKE-CODE-99999"
+          }
+        },
+        {
+          "name": "TC-11 Public Leaderboard — No Login Required",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// TC-11: Public leaderboard — SRS FR-LB-01"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "// GET /api/leaderboard/:id — public access",
+                "pm.test('Public access OK', function() { pm.response.to.have.status(200); });",
+                "pm.test('Standings array present', function() {",
+                "    pm.expect(pm.response.json()).to.have.property('standings');",
+                "    pm.expect(pm.response.json().standings).to.be.an('array');",
+                "});"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/leaderboard/1"
+          }
+        },
+        {
+          "name": "TC-12 Download Certificate PDF",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// TC-12: Certificate download — SRS FR-CE-02"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+                "pm.test('Content-Type is PDF', function() {",
+                "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/pdf');",
+                "});"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{admin_token}}"}],
+            "url": "{{base_url}}/api/certificates/1/download"
+          }
+        },
+        {
+          "name": "List All Certificates",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// List certificates"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+                "pm.test('Certificates array', function() {",
+                "    pm.expect(pm.response.json().certificates).to.be.an('array');",
+                "});",
+                "pm.test('Certificate has position', function() {",
+                "    var certs = pm.response.json().certificates;",
+                "    if (certs.length > 0) {",
+                "        pm.expect(certs[0]).to.have.property('position');",
+                "        pm.expect(certs[0]).to.have.property('unique_code');",
+                "    }",
+                "});"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{admin_token}}"}],
+            "url": "{{base_url}}/api/certificates/"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "QR",
+      "description": "QR code generation and log tests\nSRS §FR-QR-01 to FR-QR-04",
+      "item": [
+        {
+          "name": "Generate QR Code",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// Generate QR — SRS FR-QR-01"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 201', function() { pm.response.to.have.status(201); });",
+                "pm.test('qr_url has verify', function() {",
+                "    pm.expect(pm.response.json().qr_url).to.include('verify');",
+                "});",
+                "pm.test('Has unique_code', function() {",
+                "    pm.expect(pm.response.json()).to.have.property('unique_code');",
+                "});",
+                "pm.test('Has qr_type', function() {",
+                "    pm.expect(pm.response.json()).to.have.property('qr_type');",
+                "});"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type",  "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{admin_token}}"}
+            ],
+            "url": "{{base_url}}/api/qr/generate",
+            "body": {"mode": "raw", "raw": "{\"qr_type\":\"player\",\"ref_id\":1}"}
+          }
+        },
+        {
+          "name": "Get QR Logs",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// Get QR logs — SRS FR-QR-04"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+                "pm.test('Logs is array', function() {",
+                "    pm.expect(pm.response.json().logs).to.be.an('array');",
+                "});",
+                "pm.test('Log has qr_type', function() {",
+                "    var logs = pm.response.json().logs;",
+                "    if (logs.length > 0) {",
+                "        pm.expect(logs[0]).to.have.property('qr_type');",
+                "        pm.expect(['player','certificate','team','match']).to.include(logs[0].qr_type);",
+                "    }",
+                "});"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{admin_token}}"}],
+            "url": "{{base_url}}/api/qr_logs?ref_id=1"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Notifications",
+      "description": "Notification system tests\nSRS §FR-NT-01",
+      "item": [
+        {
+          "name": "Get Notifications",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// Get notifications — SRS FR-NT-01"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+                "pm.test('Notifications is array', function() {",
+                "    pm.expect(pm.response.json().notifications).to.be.an('array');",
+                "});",
+                "pm.test('Has certificate_ready notification', function() {",
+                "    var notifs = pm.response.json().notifications;",
+                "    var found  = notifs.some(function(n) { return n.type === 'certificate_ready'; });",
+                "    pm.expect(found).to.be.true;",
+                "});"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{admin_token}}"}],
+            "url": "{{base_url}}/api/notifications/?user_id=3"
+          }
+        },
+        {
+          "name": "Create Notification",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// Create notification"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 201', function() { pm.response.to.have.status(201); });",
+                "pm.test('Notification created', function() {",
+                "    pm.expect(pm.response.json().status).to.eql('success');",
+                "});"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type",  "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{admin_token}}"}
+            ],
+            "url": "{{base_url}}/api/notifications/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"user_id\":1,\"type\":\"match_scheduled\",\"message\":\"Your match is scheduled for Dec 10\"}"
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Inventory",
+      "description": "Inventory management tests\nSRS §FR-IN-01",
+      "item": [
+        {
+          "name": "Get All Inventory",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// Get inventory — SRS FR-IN-01"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+                "pm.test('Data is array', function() {",
+                "    pm.expect(pm.response.json().data).to.be.an('array');",
+                "});"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{admin_token}}"}],
+            "url": "{{base_url}}/api/inventory/"
+          }
+        },
+        {
+          "name": "Add Inventory Item",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// Add inventory item"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 201', function() { pm.response.to.have.status(201); });",
+                "pm.test('Item created', function() {",
+                "    pm.expect(pm.response.json().status).to.eql('success');",
+                "});"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type",  "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{admin_token}}"}
+            ],
+            "url": "{{base_url}}/api/inventory/",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Cricket Bat\",\"quantity\":10,\"sport_id\":1,\"condition\":\"good\"}"
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Analytics",
+      "description": "TC-13 — Analytics and reporting tests\nSRS §FR-PA-01 to FR-PA-02",
+      "item": [
+        {
+          "name": "TC-13 Analytics Overview — Admin",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// TC-13: Analytics overview — SRS FR-PA-01"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+                "pm.test('Has data', function() {",
+                "    pm.expect(pm.response.json()).to.have.property('data');",
+                "});",
+                "pm.test('Has aggregate counts', function() {",
+                "    var d    = pm.response.json().data;",
+                "    var keys = ['total_players','total_teams','total_matches','total_tournaments'];",
+                "    var has  = keys.some(function(k) { return d.hasOwnProperty(k); });",
+                "    pm.expect(has).to.be.true;",
+                "});"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{admin_token}}"}],
+            "url": "{{base_url}}/api/analytics/overview"
+          }
+        },
+        {
+          "name": "TC-13 Overview Blocked for Player — 403",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// TC-13: RBAC check — SRS FR-AU-05"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 403', function() { pm.response.to.have.status(403); });"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer player-test-token"}],
+            "url": "{{base_url}}/api/analytics/overview"
+          }
+        },
+        {
+          "name": "TC-13 Tournament Report",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// TC-13: Tournament report — SRS FR-PA-01"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+                "pm.test('Has all report sections', function() {",
+                "    var d = pm.response.json().data;",
+                "    pm.expect(d).to.have.property('tournament');",
+                "    pm.expect(d).to.have.property('matches');",
+                "    pm.expect(d).to.have.property('leaderboard');",
+                "});"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{admin_token}}"}],
+            "url": "{{base_url}}/api/reports/tournament/1"
+          }
+        },
+        {
+          "name": "TC-13 Players Report",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// TC-13: Players report — SRS FR-PA-02"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+                "pm.test('Data is array', function() {",
+                "    pm.expect(pm.response.json().data).to.be.an('array');",
+                "});",
+                "pm.test('Has matches_played if data present', function() {",
+                "    var players = pm.response.json().data;",
+                "    if (players.length > 0) {",
+                "        pm.expect(players[0]).to.have.property('matches_played');",
+                "    }",
+                "});"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{admin_token}}"}],
+            "url": "{{base_url}}/api/reports/players"
+          }
+        },
+        {
+          "name": "TC-13 Non-existent Tournament — 404",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// TC-13: 404 for nonexistent tournament"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 404', function() { pm.response.to.have.status(404); });"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{admin_token}}"}],
+            "url": "{{base_url}}/api/reports/tournament/9999"
+          }
+        },
+        {
+          "name": "Public Leaderboard Chart Data",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// Public leaderboard chart — SRS FR-LB-02"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+                "pm.test('Has chart data', function() {",
+                "    pm.expect(pm.response.json()).to.have.property('data');",
+                "});",
+                "pm.test('Data has team_id and points', function() {",
+                "    var data = pm.response.json().data;",
+                "    if (data.length > 0) {",
+                "        pm.expect(data[0]).to.have.property('team_id');",
+                "        pm.expect(data[0]).to.have.property('points');",
+                "    }",
+                "});"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/analytics/leaderboard/1"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Security",
+      "description": "TC-14, TC-15 — Security and responsive tests\nSRS §NFR-SE-01",
+      "item": [
+        {
+          "name": "TC-14 SQL Injection Blocked",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// TC-14: SQL injection — SRS NFR-SE-01"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 400 or 401', function() {",
+                "    pm.expect(pm.response.code).to.be.oneOf([400, 401]);",
+                "});",
+                "pm.test('No access_token in response', function() {",
+                "    pm.expect(pm.response.json()).to.not.have.property('access_token');",
+                "});",
+                "pm.test('No 500 error', function() {",
+                "    pm.expect(pm.response.code).to.not.equal(500);",
+                "});"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "url": "{{base_url}}/api/auth/login",
+            "body": {"mode": "raw", "raw": "{\"email\":\"' OR 1=1 --\",\"password\":\"anything\"}"}
+          }
+        },
+        {
+          "name": "TC-15 Responsive Meta Tag",
+          "event": [
+            {"listen": "prerequest", "script": {"exec": ["// TC-15: Viewport meta tag — SRS NFR-UI-01"]}},
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Status 200', function() { pm.response.to.have.status(200); });",
+                "pm.test('Has viewport meta tag', function() {",
+                "    pm.expect(pm.response.text()).to.include('viewport');",
+                "});"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/"
+          }
+        }
+      ]
+    }
+
+  ]
+}

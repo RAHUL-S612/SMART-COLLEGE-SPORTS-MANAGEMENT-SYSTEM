@@ -1,0 +1,50 @@
+from flask import Blueprint, jsonify, request, session, g
+matches_bp = Blueprint('matches', __name__, url_prefix='/api')
+_matches = []   # in-memory store
+
+def _check_token(request):
+    """Accept Bearer token OR session role."""
+    auth = request.headers.get('Authorization', '')
+    if auth.startswith('Bearer '):
+        return True
+    return session.get('role') in ('admin', 'coach')
+
+# POST /api/matches/
+@matches_bp.route('/matches/', methods=['POST'])
+def create_match():
+    if not _check_token(request):
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
+    data = request.get_json() or {}
+    venue = data.get('venue')
+    sched = data.get('scheduled_at')
+
+    # Conflict detection — same venue at same time = conflict
+    global _matches
+    conflicts = [m for m in _matches
+                 if m.get('scheduled_at') == sched
+                 and m.get('venue') == venue]
+
+    if conflicts:
+        return jsonify({
+            'status': 'error',
+            'message': 'Schedule conflict',
+            'error': 'conflict detected'
+        }), 409
+
+    match = {
+        'match_id':      len(_matches) + 1,
+        'tournament_id': data.get('tournament_id'),
+        'team1_id':      data.get('team1_id'),
+        'team2_id':      data.get('team2_id'),
+        'venue':         venue,
+        'scheduled_at':  sched,
+    }
+    _matches.append(match)
+    return jsonify({'status': 'success', 'match_id': match['match_id']}), 201
+
+# GET /api/matches/
+@matches_bp.route('/matches/', methods=['GET'])
+def list_matches():
+    tid = request.args.get('tournament_id', type=int)
+    result = [m for m in _matches if not tid or m['tournament_id'] == tid]
+    return jsonify({'status': 'success', 'matches': result}), 200

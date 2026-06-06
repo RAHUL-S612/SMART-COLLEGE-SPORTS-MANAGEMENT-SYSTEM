@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SCSS API Tester</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #1e1e2e; color: #cdd6f4; }
+    h1   { text-align: center; padding: 20px; color: #89b4fa; }
+    .container { max-width: 1000px; margin: auto; padding: 20px; }
+    .card { background: #313244; border-radius: 8px; margin: 10px 0; padding: 15px; }
+    .card h3 { color: #cba6f7; margin-bottom: 10px; }
+    button {
+      background: #89b4fa; color: #1e1e2e; border: none;
+      padding: 8px 16px; border-radius: 5px; cursor: pointer;
+      font-weight: bold; margin: 5px 2px;
+    }
+    button:hover { background: #74c7ec; }
+    button.danger { background: #f38ba8; }
+    .result {
+      background: #1e1e2e; border-radius: 5px; padding: 10px;
+      margin-top: 10px; font-family: monospace; font-size: 13px;
+      white-space: pre-wrap; max-height: 200px; overflow-y: auto;
+    }
+    .pass { color: #a6e3a1; }
+    .fail { color: #f38ba8; }
+    .info { color: #89dceb; }
+    input, textarea, select {
+      background: #45475a; border: 1px solid #585b70;
+      color: #cdd6f4; padding: 6px; border-radius: 4px;
+      width: 100%; margin: 4px 0;
+    }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 10px;
+             font-size: 12px; font-weight: bold; margin-left: 8px; }
+    .get    { background: #a6e3a1; color: #1e1e2e; }
+    .post   { background: #fab387; color: #1e1e2e; }
+    .summary { background: #313244; border-radius: 8px; padding: 15px;
+               margin: 20px 0; text-align: center; }
+    #total-pass { color: #a6e3a1; font-size: 24px; font-weight: bold; }
+    #total-fail { color: #f38ba8; font-size: 24px; font-weight: bold; }
+  </style>
+</head>
+<body>
+<h1>🏆 SCSS API Tester</h1>
+<div class="container">
+
+  <!-- Summary -->
+  <div class="summary">
+    <span>Passed: <span id="total-pass">0</span></span> &nbsp;|&nbsp;
+    <span>Failed: <span id="total-fail">0</span></span> &nbsp;|&nbsp;
+    <button onclick="runAllTests()">▶ Run All Tests</button>
+    <button onclick="resetCounts()">↺ Reset</button>
+  </div>
+
+  <!-- Base URL -->
+  <div class="card">
+    <h3>⚙ Settings</h3>
+    <label>Base URL:</label>
+    <input id="base_url" value="http://localhost:5000">
+    <label>Admin Token (auto-filled on login):</label>
+    <input id="admin_token" value="admin-test-token">
+    <label>Coach Token:</label>
+    <input id="coach_token" value="coach-test-token">
+  </div>
+
+  <!-- AUTH -->
+  <div class="card">
+    <h3>🔐 Auth Tests</h3>
+    <button onclick="runTest('tc01_admin_login')">TC-01 Admin Login</button>
+    <button onclick="runTest('tc01_coach_login')">TC-01 Coach Login</button>
+    <button onclick="runTest('tc02_invalid_login')" class="danger">TC-02 Invalid Login</button>
+    <button onclick="runTest('tc03_logout')">TC-03 Logout</button>
+    <button onclick="runTest('register_player')">Register Player</button>
+    <div class="result" id="result_auth">Results will appear here...</div>
+  </div>
+
+  <!-- PLAYERS -->
+  <div class="card">
+    <h3>👤 Player Tests</h3>
+    <button onclick="runTest('get_players')">Get All Players</button>
+    <button onclick="runTest('get_player_by_id')">Get Player by ID</button>
+    <button onclick="runTest('add_player_to_team')">Add Player to Team</button>
+    <button onclick="runTest('get_team_roster')">Get Team Roster</button>
+    <div class="result" id="result_players">Results will appear here...</div>
+  </div>
+
+  <!-- MATCHES -->
+  <div class="card">
+    <h3>🏏 Match Tests</h3>
+    <button onclick="runTest('tc05_schedule_match')">TC-05 Schedule Match</button>
+    <button onclick="runTest('tc06_conflict')" class="danger">TC-06 Conflict Detection</button>
+    <button onclick="runTest('get_matches')">Get All Matches</button>
+    <div class="result" id="result_matches">Results will appear here...</div>
+  </div>
+
+  <!-- SCORES -->
+  <div class="card">
+    <h3>🎯 Score Tests</h3>
+    <button onclick="runTest('tc07_enter_score')">TC-07 Enter Score</button>
+    <button onclick="runTest('get_scores')">Get All Scores</button>
+    <div class="result" id="result_scores">Results will appear here...</div>
+  </div>
+
+  <!-- CERTIFICATES -->
+  <div class="card">
+    <h3>🏅 Certificate Tests</h3>
+    <button onclick="runTest('tc09_valid_qr')">TC-09 Valid QR</button>
+    <button onclick="runTest('tc10_invalid_qr')" class="danger">TC-10 Invalid QR</button>
+    <button onclick="runTest('tc11_leaderboard')">TC-11 Public Leaderboard</button>
+    <button onclick="runTest('tc12_download_cert')">TC-12 Download Cert</button>
+    <div class="result" id="result_certificates">Results will appear here...</div>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div class="card">
+    <h3>📊 Analytics Tests</h3>
+    <button onclick="runTest('tc13_overview')">TC-13 Overview</button>
+    <button onclick="runTest('tc13_tournament_report')">TC-13 Tournament Report</button>
+    <button onclick="runTest('tc13_players_report')">TC-13 Players Report</button>
+    <button onclick="runTest('tc13_403')" class="danger">TC-13 Player Gets 403</button>
+    <div class="result" id="result_analytics">Results will appear here...</div>
+  </div>
+
+  <!-- QR -->
+  <div class="card">
+    <h3>📷 QR Tests</h3>
+    <button onclick="runTest('generate_qr')">Generate QR</button>
+    <button onclick="runTest('get_qr_logs')">Get QR Logs</button>
+    <div class="result" id="result_qr">Results will appear here...</div>
+  </div>
+
+  <!-- NOTIFICATIONS -->
+  <div class="card">
+    <h3>🔔 Notification Tests</h3>
+    <button onclick="runTest('get_notifications')">Get Notifications</button>
+    <div class="result" id="result_notifications">Results will appear here...</div>
+  </div>
+
+  <!-- SECURITY -->
+  <div class="card">
+    <h3>🔒 Security Tests</h3>
+    <button onclick="runTest('tc14_sql_injection')" class="danger">TC-14 SQL Injection</button>
+    <button onclick="runTest('tc15_viewport')">TC-15 Viewport Meta</button>
+    <div class="result" id="result_security">Results will appear here...</div>
+  </div>
+
+</div>
+
+<script>
+  let passCount = 0, failCount = 0;
+
+  function base()  { return document.getElementById('base_url').value; }
+  function aToken(){ return document.getElementById('admin_token').value; }
+  function cToken(){ return document.getElementById('coach_token').value; }
+
+  function updateCounts(passed) {
+    if (passed) passCount++; else failCount++;
+    document.getElementById('total-pass').textContent = passCount;
+    document.getElementById('total-fail').textContent = failCount;
+  }
+
+  function resetCounts() {
+    passCount = 0; failCount = 0;
+    document.getElementById('total-pass').textContent = 0;
+    document.getElementById('total-fail').textContent = 0;
+  }
+
+  async function apiCall(method, url, body, headers={}) {
+    const opts = {
+      method,
+      headers: { 'Content-Type': 'application/json', ...headers }
+    };
+    if (body) opts.body = JSON.stringify(body);
+    try {
+      const r = await fetch(base() + url, opts);
+      let data;
+      const ct = r.headers.get('Content-Type') || '';
+      if (ct.includes('application/pdf')) {
+        data = '[PDF Binary Data]';
+      } else if (ct.includes('application/json')) {
+        data = await r.json();
+      } else {
+        data = await r.text();
+      }
+      return { status: r.status, data };
+    } catch(e) {
+      return { status: 0, data: 'ERROR: ' + e.message +
+        ' — Make sure Flask is running: python app.py' };
+    }
+  }
+
+  function showResult(section, label, status, expected, data, passed) {
+    const el = document.getElementById('result_' + section);
+    const icon = passed ? '✅' : '❌';
+    const cls  = passed ? 'pass' : 'fail';
+    el.innerHTML += `<span class="${cls}">${icon} ${label} | Expected: ${expected} Got: ${status}</span>\n`;
+    el.innerHTML += `<span class="info">   ${JSON.stringify(data).substring(0,120)}</span>\n\n`;
+    el.scrollTop = el.scrollHeight;
+    updateCounts(passed);
+  }
+
+  function clearResult(section) {
+    document.getElementById('result_' + section).innerHTML = '';
+  }
+
+  const TESTS = {
+    // ── AUTH ──────────────────────────────────────────────────
+    tc01_admin_login: async () => {
+      clearResult('auth');
+      const r = await apiCall('POST', '/api/auth/login',
+        {username:'admin', password:'admin123'});
+      const ok = r.status===200 && r.data.status==='success';
+      if (ok && r.data.token)
+        document.getElementById('admin_token').value = r.data.token;
+      showResult('auth','TC-01 Admin Login',r.status,200,r.data,ok);
+    },
+    tc01_coach_login: async () => {
+      const r = await apiCall('POST', '/api/auth/login',
+        {username:'coach1', password:'coach123'});
+      const ok = r.status===200;
+      if (ok && r.data.token)
+        document.getElementById('coach_token').value = r.data.token;
+      showResult('auth','TC-01 Coach Login',r.status,200,r.data,ok);
+    },
+    tc02_invalid_login: async () => {
+      const r = await apiCall('POST', '/api/auth/login',
+        {username:'admin', password:'wrongpass'});
+      showResult('auth','TC-02 Invalid Login',r.status,401,r.data,r.status===401);
+    },
+    tc03_logout: async () => {
+      const r = await apiCall('POST', '/api/auth/logout', null,
+        {Authorization:'Bearer '+aToken()});
+      showResult('auth','TC-03 Logout',r.status,200,r.data,r.status===200);
+    },
+    register_player: async () => {
+      const r = await apiCall('POST', '/api/auth/register', {
+        name:'Test Player', email:'test'+Date.now()+'@college.edu',
+        password:'Player@123', role:'player',
+        reg_number:'CSE2025001', department:'CSE', year:2, sport_id:1
+      });
+      showResult('auth','Register Player',r.status,201,r.data,r.status===201);
+    },
+
+    // ── PLAYERS ───────────────────────────────────────────────
+    get_players: async () => {
+      clearResult('players');
+      const r = await apiCall('GET','/api/players',null,
+        {Authorization:'Bearer '+aToken()});
+      showResult('players','Get All Players',r.status,200,r.data,r.status===200);
+    },
+    get_player_by_id: async () => {
+      const r = await apiCall('GET','/api/players/1',null,
+        {Authorization:'Bearer '+aToken()});
+      const ok = r.status===200 && r.data.qr_code!=null;
+      showResult('players','Get Player by ID (has qr_code)',r.status,200,r.data,ok);
+    },
+    add_player_to_team: async () => {
+      const r = await apiCall('POST','/api/teams/1/players',
+        {player_id:3},{Authorization:'Bearer '+aToken()});
+      showResult('players','Add Player to Team',r.status,201,r.data,r.status===201);
+    },
+    get_team_roster: async () => {
+      const r = await apiCall('GET','/api/teams/1/players',null,
+        {Authorization:'Bearer '+aToken()});
+      const ok = r.status===200 && Array.isArray(r.data.players);
+      showResult('players','Get Team Roster',r.status,200,r.data,ok);
+    },
+
+    // ── MATCHES ───────────────────────────────────────────────
+    tc05_schedule_match: async () => {
+      clearResult('matches');
+      const r = await apiCall('POST','/api/matches/', {
+        tournament_id:1, team1_id:1, team2_id:2,
+        venue:'Ground B', scheduled_at:'2025-12-20T10:00:00'
+      },{Authorization:'Bearer '+aToken()});
+      showResult('matches','TC-05 Schedule Match',r.status,201,r.data,r.status===201);
+    },
+    tc06_conflict: async () => {
+      // First create
+      await apiCall('POST','/api/matches/',{
+        tournament_id:1,team1_id:1,team2_id:2,
+        venue:'Ground C',scheduled_at:'2025-12-21T10:00:00'
+      },{Authorization:'Bearer '+aToken()});
+      // Try duplicate
+      const r = await apiCall('POST','/api/matches/',{
+        tournament_id:1,team1_id:3,team2_id:4,
+        venue:'Ground C',scheduled_at:'2025-12-21T10:00:00'
+      },{Authorization:'Bearer '+aToken()});
+      showResult('matches','TC-06 Conflict Detection',r.status,409,r.data,r.status===409);
+    },
+    get_matches: async () => {
+      const r = await apiCall('GET','/api/matches/?tournament_id=1',null,
+        {Authorization:'Bearer '+aToken()});
+      showResult('matches','Get All Matches',r.status,200,r.data,r.status===200);
+    },
+
+    // ── SCORES ────────────────────────────────────────────────
+    tc07_enter_score: async () => {
+      clearResult('scores');
+      const r = await apiCall('POST','/api/scores/',{
+        match_id:1,team1_score:3,team2_score:1,winner_team_id:1
+      },{Authorization:'Bearer '+cToken()});
+      const ok = r.status===201 && r.data.score_id!=null;
+      showResult('scores','TC-07 Enter Score',r.status,201,r.data,ok);
+    },
+    get_scores: async () => {
+      const r = await apiCall('GET','/scores/',null,
+        {Authorization:'Bearer '+aToken()});
+      showResult('scores','Get All Scores',r.status,200,r.data,r.status===200);
+    },
+
+    // ── CERTIFICATES ──────────────────────────────────────────
+    tc09_valid_qr: async () => {
+      clearResult('certificates');
+      const r = await apiCall('GET','/api/verify/SCSS-2025-CERT-001-GOLD');
+      const ok = r.status===200 && r.data.is_valid===true;
+      showResult('certificates','TC-09 Valid QR',r.status,200,r.data,ok);
+    },
+    tc10_invalid_qr: async () => {
+      const r = await apiCall('GET','/api/verify/FAKE-CODE-99999');
+      const ok = r.status===404 && r.data.is_valid===false;
+      showResult('certificates','TC-10 Invalid QR',r.status,404,r.data,ok);
+    },
+    tc11_leaderboard: async () => {
+      const r = await apiCall('GET','/api/leaderboard/1');
+      const ok = r.status===200 && r.data.standings!=null;
+      showResult('certificates','TC-11 Public Leaderboard',r.status,200,r.data,ok);
+    },
+    tc12_download_cert: async () => {
+      const r = await apiCall('GET','/api/certificates/1/download',null,
+        {Authorization:'Bearer '+aToken()});
+      showResult('certificates','TC-12 Download Cert (PDF)',r.status,200,r.data,r.status===200);
+    },
+
+    // ── ANALYTICS ─────────────────────────────────────────────
+    tc13_overview: async () => {
+      clearResult('analytics');
+      const r = await apiCall('GET','/api/analytics/overview',null,
+        {Authorization:'Bearer '+aToken()});
+      showResult('analytics','TC-13 Overview',r.status,200,r.data,r.status===200);
+    },
+    tc13_tournament_report: async () => {
+      const r = await apiCall('GET','/api/reports/tournament/1',null,
+        {Authorization:'Bearer '+aToken()});
+      const ok = r.status===200 && r.data.data && r.data.data.tournament!=null;
+      showResult('analytics','TC-13 Tournament Report',r.status,200,r.data,ok);
+    },
+    tc13_players_report: async () => {
+      const r = await apiCall('GET','/api/reports/players',null,
+        {Authorization:'Bearer '+aToken()});
+      showResult('analytics','TC-13 Players Report',r.status,200,r.data,r.status===200);
+    },
+    tc13_403: async () => {
+      const r = await apiCall('GET','/api/reports/players',null,
+        {Authorization:'Bearer player-token'});
+      showResult('analytics','TC-13 Player Gets 403',r.status,403,r.data,r.status===403);
+    },
+
+    // ── QR ────────────────────────────────────────────────────
+    generate_qr: async () => {
+      clearResult('qr');
+      const r = await apiCall('POST','/api/qr/generate',
+        {qr_type:'player',ref_id:1},
+        {Authorization:'Bearer '+aToken()});
+      const ok = r.status===201 && r.data.qr_url &&
+                 r.data.qr_url.includes('verify');
+      showResult('qr','Generate QR',r.status,201,r.data,ok);
+    },
+    get_qr_logs: async () => {
+      const r = await apiCall('GET','/api/qr_logs?ref_id=1',null,
+        {Authorization:'Bearer '+aToken()});
+      showResult('qr','Get QR Logs',r.status,200,r.data,r.status===200);
+    },
+
+    // ── NOTIFICATIONS ─────────────────────────────────────────
+    get_notifications: async () => {
+      clearResult('notifications');
+      const r = await apiCall('GET','/api/notifications/?user_id=3',null,
+        {Authorization:'Bearer '+aToken()});
+      const ok = r.status===200 && Array.isArray(r.data.notifications);
+      showResult('notifications','Get Notifications',r.status,200,r.data,ok);
+    },
+
+    // ── SECURITY ──────────────────────────────────────────────
+    tc14_sql_injection: async () => {
+      clearResult('security');
+      const r = await apiCall('POST','/api/auth/login',
+        {email:"' OR 1=1 --", password:'anything'});
+      const ok = r.status===400 || r.status===401;
+      showResult('security','TC-14 SQL Injection Blocked',r.status,'400/401',r.data,ok);
+    },
+    tc15_viewport: async () => {
+      const r = await apiCall('GET','/');
+      const ok = r.status===200 &&
+                 typeof r.data==='string' && r.data.includes('viewport');
+      showResult('security','TC-15 Viewport Meta Tag',r.status,200,
+                 ok?'viewport found':'viewport MISSING',ok);
+    },
+  };
+
+  async function runTest(name) {
+    if (TESTS[name]) await TESTS[name]();
+  }
+
+  async func

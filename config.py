@@ -8,18 +8,17 @@ from datetime import timedelta
 
 class Config:
     # -- Security ---------------------------------------------
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'scss-super-secret-key-change-in-prod')
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'your-secret-key')
 
     # -- Database ---------------------------------------------
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:@localhost/sports_management')
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'mysql+pymysql://root:@localhost/sports_management')
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_recycle': 280,
         'pool_pre_ping': True,
     }
 
     # -- JWT --------------------------------------------------
-    JWT_SECRET_KEY           = os.environ.get('JWT_SECRET_KEY', 'scss-jwt-secret-change-in-prod')
+    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'your-jwt-secret')
     JWT_TOKEN_LOCATION       = ['cookies']
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=30)
     JWT_COOKIE_SECURE        = False

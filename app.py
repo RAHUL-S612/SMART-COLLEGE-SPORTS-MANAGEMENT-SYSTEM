@@ -162,11 +162,10 @@ def create_app():
 
 # -- Run directly --------------------------------------------
 if __name__ == '__main__':
-    app = create_app()
-    app.run(
-        host='0.0.0.0',
-        port=5000,
-        debug=True,
-        threaded=True,
-        use_reloader=False
+    import os
+    if os.name == 'nt':  # Windows
+        from waitress import serve
+        serve(app, host='0.0.0.0', port=5000)
+    else:  # Linux (Render)
+        app.run()
     )

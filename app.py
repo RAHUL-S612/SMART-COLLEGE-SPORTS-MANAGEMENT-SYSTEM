@@ -170,6 +170,30 @@ def create_app():
 # -- For gunicorn (Render) -----------------------------------
 app = create_app()
 
+# -- For gunicorn (Render) -----------------------------------
+app = create_app()
+
+# -- Auto-seed admin on startup ------------------------------
+def seed_admin():
+    from models.user import User
+    from werkzeug.security import generate_password_hash
+    with app.app_context():
+        db.create_all()
+        if not User.query.filter_by(email='rahul@college.edu').first():
+            admin = User(
+                name='Rahul',
+                email='rahul@college.edu',
+                password=generate_password_hash('Admin@123'),
+                role='admin'
+            )
+            db.session.add(admin)
+            db.session.commit()
+            print("✅ Admin seeded")
+        else:
+            print("ℹ️ Admin already exists")
+
+seed_admin()
+
 # -- Run directly (Windows local) ----------------------------
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

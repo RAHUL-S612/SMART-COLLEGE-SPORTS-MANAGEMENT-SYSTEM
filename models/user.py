@@ -21,14 +21,6 @@ class User(db.Model):
     updated_at = db.Column(db.DateTime, nullable=False,
                            default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relationships
-    player_profile = db.relationship('Player', back_populates='user',
-                                     uselist=False, cascade='all, delete-orphan')
-    coached_teams  = db.relationship('Team', back_populates='coach',
-                                     foreign_keys='Team.coach_id')
-    notifications  = db.relationship('Notification', back_populates='user',
-                                     cascade='all, delete-orphan')
-
     def to_dict(self):
         return {
             'user_id':    self.user_id,

@@ -15,6 +15,7 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['TESTING']                        = False
     app.config['JSON_SORT_KEYS']                 = False
+    app.config['SQLALCHEMY_ENGINE_OPTIONS']      = {'connect_args': {'connect_timeout': 5}}
 
     # Allow /route and /route/ without 308 redirect
     app.url_map.strict_slashes = False
@@ -101,17 +102,17 @@ def create_app():
     from routes.inventory_routes import inventory_bp
     from routes.scores           import scores_bp, list_scores, post_score
 
-    app.register_blueprint(auth_bp)            # /api/auth/...
-    app.register_blueprint(teams_bp)           # /teams/...
-    app.register_blueprint(matches_bp)         # /api/matches/...
-    app.register_blueprint(players_bp)         # /api/players/...
-    app.register_blueprint(analytics_bp)       # /api/analytics/...
-    app.register_blueprint(leaderboard_bp)     # /api/leaderboard/...
-    app.register_blueprint(certificates_bp)    # /api/certificates/...
-    app.register_blueprint(notifications_bp)   # /api/notifications/...
-    app.register_blueprint(qr_bp)              # /api/qr/...
-    app.register_blueprint(inventory_bp)       # /api/inventory/...
-    app.register_blueprint(scores_bp)          # /scores/
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(teams_bp)
+    app.register_blueprint(matches_bp)
+    app.register_blueprint(players_bp)
+    app.register_blueprint(analytics_bp)
+    app.register_blueprint(leaderboard_bp)
+    app.register_blueprint(certificates_bp)
+    app.register_blueprint(notifications_bp)
+    app.register_blueprint(qr_bp)
+    app.register_blueprint(inventory_bp)
+    app.register_blueprint(scores_bp)
 
     # Second registration for /api/scores/
     scores_api_bp = Blueprint(
@@ -123,7 +124,7 @@ def create_app():
     scores_api_bp.add_url_rule(
         '/', view_func=post_score,  methods=['POST']
     )
-    app.register_blueprint(scores_api_bp)      # /api/scores/
+    app.register_blueprint(scores_api_bp)
 
     # -- Error Handlers ----------------------------------------
     @app.errorhandler(404)
@@ -160,12 +161,9 @@ def create_app():
     return app
 
 
-# -- Run directly --------------------------------------------
+# -- For gunicorn (Render) -----------------------------------
+app = create_app()
+
+# -- Run directly (Windows local) ----------------------------
 if __name__ == '__main__':
-    import os
-    if os.name == 'nt':  # Windows
-        from waitress import serve
-        serve(app, host='0.0.0.0', port=5000)
-    else:  # Linux (Render)
-        app.run()
-    )
+    app.run(host='0.0.0.0', port=5000, debug=True)

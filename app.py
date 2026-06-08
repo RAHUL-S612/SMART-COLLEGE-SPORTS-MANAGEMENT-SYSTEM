@@ -10,8 +10,11 @@ from models import db
 def create_app():
     app = Flask(__name__)
 
-    # -- Configuration -----------------------------------------
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'mysql+pymysql://root:@localhost/sports_db')
+   # -- Configuration -----------------------------------------
+    database_url = os.environ.get('DATABASE_URL', 'mysql+pymysql://root:@localhost/sports_db')
+    if database_url.startswith('postgres://'):
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
     app.config['SECRET_KEY']              = os.environ.get('SECRET_KEY', 'SmartSportal@2026')
     app.config['JWT_SECRET_KEY']          = os.environ.get('JWT_SECRET_KEY', 'JWT@SmartSportal2026')
     app.config['FLASK_ENV']               = os.environ.get('FLASK_ENV', 'development')

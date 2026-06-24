@@ -53,48 +53,57 @@ def logout():
 @auth_bp.route('/auth/register', methods=['POST'])
 def register():
     data = request.get_json() or {}
-    name = data.get('name')
+    name  = data.get('name')
     email = data.get('email', '')
+
     if not name:
         return jsonify({'status': 'error', 'message': 'Name required'}), 400
     if not email:
         return jsonify({'status': 'error', 'message': 'Email required'}), 400
+
+    # FIX 1: Check duplicate in already registered players (in-memory)
     for pid, p in list(_registered_players.items()):
         if p['email'] == email:
             return jsonify({'status': 'error', 'message': 'Email already registered'}), 409
+
+    # FIX 1: Also check against seeded _users (persists across restarts)
+    for uname, u in _users.items():
+        if uname == email.split('@')[0]:
+            return jsonify({'status': 'error', 'message': 'Email already registered'}), 409
+
     reg_number = data.get('reg_number', '')
-    player_id = len(_registered_players) + 100
+    player_id  = len(_registered_players) + 100
     player = {
-        'player_id': player_id,
-        'name': name,
-        'email': email,
-        'role': 'player',
+        'player_id':  player_id,
+        'name':       name,
+        'email':      email,
+        'role':       'player',
         'reg_number': reg_number,
         'department': data.get('department'),
-        'year': data.get('year'),
-        'sport_id': data.get('sport_id'),
-        'qr_code': 'QR-' + str(player_id) + '-' + str(reg_number)
+        'year':       data.get('year'),
+        'sport_id':   data.get('sport_id'),
+        'qr_code':    'QR-' + str(player_id) + '-' + str(reg_number)
     }
     _registered_players[player_id] = player
     return jsonify({'status': 'success', 'player_id': player_id}), 201
 
 @auth_bp.route('/auth/verify-token', methods=['GET'])
 def verify_token():
-    auth = request.headers.get('Authorization', '')
+    auth  = request.headers.get('Authorization', '')
     token = auth.replace('Bearer ', '').strip()
-    role = _active_tokens.get(token)
+    role  = _active_tokens.get(token)
     if role:
         return jsonify({'status': 'success', 'valid': True, 'role': role}), 200
     return jsonify({'status': 'error', 'valid': False, 'message': 'Invalid token'}), 401
 
 @auth_bp.route('/auth/me', methods=['GET'])
 def me():
-    auth = request.headers.get('Authorization', '')
-    token = auth.replace('Bearer ', '').strip()
-    role = _active_tokens.get(token)
+    auth     = request.headers.get('Authorization', '')
+    token    = auth.replace('Bearer ', '').strip()
+    role     = _active_tokens.get(token)
     username = None
     if not role:
-        role = session.get('role')
+        role     = session.get('role')
         username = session.get('user')
     else:
         for u, d in _users.items():
@@ -107,9 +116,9 @@ def me():
 
 @auth_bp.route('/auth/users', methods=['GET'])
 def list_users():
-    auth = request.headers.get('Authorization', '')
+    auth  = request.headers.get('Authorization', '')
     token = auth.replace('Bearer ', '').strip()
-    role = _active_tokens.get(token)
+    role  = _active_tokens.get(token)
     if not role:
         role = session.get('role')
     if role != 'admin':

@@ -35,8 +35,7 @@ def create_app():
     # -- Root route --------------------------------------------
     @app.route('/')
     def index():
-        return render_template('SCSS_Frontend_Pro')
-
+        return render_template('SCSS_Frontend_Pro.html')   # add .html
 
 
     # -- Register Blueprints -----------------------------------

@@ -30,7 +30,7 @@ class Config:
     MAIL_PORT           = int(os.environ.get('MAIL_PORT', 587))
     MAIL_USE_TLS        = True
     MAIL_USERNAME       = os.environ.get('MAIL_USERNAME', 'your-email@gmail.com')   # ← change
-    MAIL_PASSWORD       = uhzi fxwg fauh vxao    # ← change
+    MAIL_PASSWORD       = "olag ayhm vbop htgw"    # ← change
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_USERNAME', 'your-email@gmail.com')   # ← change
 
     # -- File Paths -------------------------------------------
